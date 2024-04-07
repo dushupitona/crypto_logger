@@ -1,0 +1,53 @@
+services:
+
+  db:
+    image: postgres:15
+    env_file:
+      - .env
+  
+  web:
+    depends_on:
+      - db
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./crypto_logger:/app
+    env_file:
+      - .env
+    command: >
+      sh -c "python manage.py runserver 0.0.0.0:8000"
+
+
+
+  redis:
+      image: redis:latest
+      ports:
+        - 6379:6379
+
+
+  celery:
+    build:
+      context: .
+    command: celery -A crypto_logger worker --loglevel=info
+    volumes:
+      - ./crypto_logger:/app
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+
+
+  celery-beat:
+    build:
+      context: .
+    command: celery -A crypto_logger beat --loglevel=info
+    volumes:
+      - ./crypto_logger:/app
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
