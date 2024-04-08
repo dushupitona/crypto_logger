@@ -7,6 +7,8 @@ from service.models import BTCUSD_info_model
 
 import os
 
+import datetime
+
 
 @app.task
 def collect_crypto():
@@ -23,7 +25,10 @@ def collect_crypto():
     
     data = response_data['result']['list'][0]
 
+    data_date = datetime.datetime.fromtimestamp(response_data['time'] / 1000, datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+
     new_write = BTCUSD_info_model(
+        log_date=str(data_date),
         last_price=data['lastPrice'],
         index_price=data['indexPrice'],
         mark_price=data['markPrice'],
@@ -31,4 +36,5 @@ def collect_crypto():
     
     new_write.save()
 
-    print('New write !')   
+    print('New write !')
+   
